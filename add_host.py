@@ -17,7 +17,6 @@ def add_host( hostname, ipaddress, folder ):
     url = watourl + '?action=' + action + '&_username=' + username + '&_secret=' + password
     data = json.dumps({"hostname": hostname, "folder": folder, "attributes": { "ipaddress": ipaddress } })
     result = post(url, "request=" + data)
-    #return result['result_code']
     return result
 
 def discover_services( hostname ):
@@ -25,14 +24,12 @@ def discover_services( hostname ):
     url = watourl + '?action=' + action + '&_username=' + username + '&_secret=' + password
     data = json.dumps({"hostname": hostname })
     result = post(url, "request=" + data)
-    #return result['result_code']
     return result
 
 def activate_changes():
     action = "activate_changes"
     url = watourl + '?action=' + action + '&_username=' + username + '&_secret=' + password
     result = get(url)
-    #return result['result_code']
     return result
 
 def display_help():
@@ -72,29 +69,25 @@ def main(argv):
     if (ipaddress == ''):
         ipaddress = hostname
     if (shortname == ''):
-        nameparts = hostname.split('.')
-        numparts = len(nameparts)
-        if ( numparts >3 ):
-            count = 0
-            while ( count < (numparts -1) ):
-                shortname += nameparts[count]
-        else:
-            shortname = nameparts[0]
+        shortname = hostname.rsplit('.',2)[0]
 
     msg = add_host(shortname,ipaddress,folder)
     if msg['result_code']:
         print "Error adding host %s" % msg['result']
-    else:
-        msg = discover_services(shortname)
-        if msg['result_code']:
-            print "Error Discovering Services %s " % msg['result']
-        else:
-            msg = activate_changes()
-            if msg['result_code']:
-                print "Error activating changes %s " % msg['result']
-            else:
-                print "Host added Successfully"
+        sys.exit(1)
 
+    msg = discover_services(shortname)
+    if msg['result_code']:
+        print "Error Discovering Services %s " % msg['result']
+        sys.exit(1)
 
+    msg = activate_changes()
+    if msg['result_code']:
+        print "Error activating changes %s " % msg['result']
+        sys.exit(1)
+
+    print "%s added Successfully" % shortname
+    sys.exit()
+    
 if __name__ == "__main__":
     main(sys.argv[1:])
