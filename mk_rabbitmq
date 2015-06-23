@@ -1,0 +1,57 @@
+#!/usr/bin/python
+import sys, ConfigParser, requests
+configurationfile = "/etc/check_mk/rabbitmq.cfg"
+config = ConfigParser.ConfigParser({'username': 'youmail','password':'r4bbitmq','address':'127.0.0.1','port':      '15672','path':'/api/vhosts/'})
+config.read(configurationfile)
+
+try:
+    address = config.get('rabbitmq','address')
+except:
+    address = config.get('DEFAULT','address')
+
+try:
+    port = config.get('rabbitmq','port')
+except:
+    port = config.get('DEFAULT','port')
+
+try:
+    path = config.get('rabbitmq','path')
+except:
+    path = config.get('DEFAULT','path')
+
+try:
+    username = config.get('rabbitmq','username')
+except:
+    username = config.get('DEFAULT','username')
+
+try:
+    password = config.get('rabbitmq','password')
+except:
+    password = config.get('DEFAULT','password')
+
+
+def getJSON():
+    r = requests.get('http://' + address + ':' + port + path, auth=(username,password))
+    return r.json()
+
+data = getJSON()
+
+for queue in data:
+    if '/' == queue['name']:
+        continue
+    print queue['name']
+    try:
+        print queue['messages_ready']
+    except:
+        print "none"
+    try:
+        print queue['messages_unacknowledged']
+    except:
+        print "none"
+    try:
+        print queue['messages_ready_details']['rate']
+    except:
+        print "none"
+#recieve_rate
+#connections_notrunning
+#memory usage
